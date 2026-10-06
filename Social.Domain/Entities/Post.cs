@@ -14,6 +14,8 @@ namespace Social.Domain.Entities
 
         public DateTimeOffset CreatedAt { get; private set; }
 
+        public DateTimeOffset? UpdatedAt { get; private set; }
+
         public Post(Guid authorId, string content)
         {
             if (authorId == Guid.Empty)
@@ -38,7 +40,15 @@ namespace Social.Domain.Entities
                 throw new ArgumentException("Nội dung bài viết không được để trống.", nameof(content));
             }
 
-            Content = content.Trim();
+            var normalizedContent = content.Trim();
+
+            if (Content == normalizedContent)
+            {
+                return;
+            }
+
+            Content = normalizedContent;
+            UpdatedAt = DateTimeOffset.UtcNow;
         }
     }
 }

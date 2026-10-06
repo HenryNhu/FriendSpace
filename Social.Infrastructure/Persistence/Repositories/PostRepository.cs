@@ -45,7 +45,10 @@ namespace Social.Infrastructure.Persistence.Repositories
         {
             _dbContext.Posts.Attach(post);
 
-            _dbContext.Entry(post).Property(p => p.Content).IsModified = true;
+            var entry = _dbContext.Entry(post);
+
+            entry.Property(p => p.Content).IsModified = true;
+            entry.Property(p => p.UpdatedAt).IsModified = true;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

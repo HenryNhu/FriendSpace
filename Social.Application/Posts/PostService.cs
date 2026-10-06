@@ -22,7 +22,8 @@ namespace Social.Application.Posts
                 Id = post.Id,
                 AuthorId = post.AuthorId,
                 Content = post.Content,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                UpdatedAt = post.UpdatedAt,
             };
         }
 

@@ -71,11 +71,11 @@ namespace Social.Application.Posts
             return posts.Select(ToResponse).ToList();
         }
 
-        public async Task<PostResponse?> UpdateContentAsync(Guid id, string content, CancellationToken cancellationToken = default)
+        public async Task<PostResponse?> UpdateContentAsync(Guid id, Guid currentUserId, string content, CancellationToken cancellationToken = default)
         {
             var post = await _postRepository.GetByIdAsync(id, cancellationToken);
 
-            if (post is null)
+            if (post is null || post.AuthorId != currentUserId)
             {
                 return null;
             }
@@ -87,9 +87,9 @@ namespace Social.Application.Posts
             return ToResponse(post);
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default)
         {
-            return await _postRepository.DeleteAsync(id, cancellationToken);
+            return await _postRepository.DeleteAsync(id, currentUserId, cancellationToken);
         }
     }
 }

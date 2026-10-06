@@ -1,12 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Social.Domain.Entities;
+using Social.Infrastructure.Identity;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Social.Infrastructure.Persistence
 {
-    public class SocialDbContext : DbContext
+    public class SocialDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public SocialDbContext(DbContextOptions<SocialDbContext> options) : base(options)
         { 

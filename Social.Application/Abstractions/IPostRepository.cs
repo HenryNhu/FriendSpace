@@ -15,6 +15,6 @@ namespace Social.Application.Abstractions
 
         Task UpdateContentAsync(Post post, CancellationToken cancellationToken = default);
 
-        Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<bool> DeleteAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default);
     }
 }

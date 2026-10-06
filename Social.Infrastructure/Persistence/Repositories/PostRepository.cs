@@ -50,10 +50,12 @@ namespace Social.Infrastructure.Persistence.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default)
         {
             var affectedRows = await _dbContext.Posts
-                .Where(post => post.Id == id)
+                .Where(post => 
+                    post.Id == id &&
+                    post.AuthorId == currentUserId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             return affectedRows > 0;

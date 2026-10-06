@@ -1,0 +1,45 @@
+@baseUrl = https://localhost:7192
+@accessToken = CfDJ8BKHkEPIFZxJlFDI7YlckWKn3xy9NLZkMSo0XPDqNTQ1cuMf7IBFL0EuieqnC6GAVVY9X5eoC_OvAmgsYvrDRm82QNH9IhpW6UKgzV1oyjwW7vOpKfeEKttWGmwCmKlbjwcvDg78IP26ICqO0eLI5w7SHyGzbBR9FnGIUs25tabZp2e4A12M0Gp5SCeoG2itnfSF0aGyoGukdhpJnwV3KvcP4rQGhUFM9SGTUmVCu2zviPeaEyjuWOQBCvnVD3AqUQc40mljauXjUpkYsrBwjfO9TqRKJck1-Z8hYEi5VLEjTvr6ScyTi74a3lVea-NCUPPOYd87JsZxgEf1PtfvOLsix9vgWN1ALeWIaB-ul4yNayGGd3gCsjqfACMyy2OJbFsIjVD3aXjnm9jPi79jf0dFbL-xm-Q6Zqh7mwHlOhwq9cgpGM3LsUUxCR79Q4bqZQA7COGGA54drgVOe9A6H1xztYvDXOjCWRzUV-zZfb67uMOd9PyrpiBQ3eu1K-kigrMrZaO1PZbcvjB6g8qkfMC9ktlJTQFWxhuTXQBSKYNlcL6F6XE1y0NkwggmQxGtJ3_qPFo8aAjUF2PAWdXFovLBibP2xASmt-FA-8E4_RTZbGa0soJrsG4NoHo1QfYSdLUnhpsuZk_4DdJTwcE_inz6mbg9UgetrIBb0BPTCh0aT1yimHpid81wd6wpysYPH_kyII8BODd_IMNAPQd8c6pTVwcy_t-z57SlTxi4gPJ0
+
+### Dang ky tai khoan thu 1
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "friendspace.demo@example.com",
+  "password": "DemoFriendSpace123!"
+}
+
+### Dang ky tai khoan thu 2
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "friendspace1.demo@example.com",
+  "password": "DemoFriendSpace123!"
+}
+
+### Dang nhap 1
+POST {{baseUrl}}/api/auth/login?useCookies=false
+Content-Type: application/json
+
+{
+  "email": "friendspace.demo@example.com",
+  "password": "DemoFriendSpace123!"
+}
+
+### Dang nhap 2
+POST {{baseUrl}}/api/auth/login?useCookies=false
+Content-Type: application/json
+
+{
+  "email": "friendspace1.demo@example.com",
+  "password": "DemoFriendSpace123!"
+}
+
+### Xem thong tin khi chua dang nhap
+GET {{baseUrl}}/api/auth/manage/info
+
+### Xem thong tin bang access token
+GET {{baseUrl}}/api/auth/manage/info
+Authorization: Bearer {{accessToken}}

@@ -1,5 +1,6 @@
 ﻿using Social.Api.Contracts;
 using Social.Application.Posts;
+using System.Security.Claims;
 
 namespace Social.Api.Endpoint
 {
@@ -9,20 +10,25 @@ namespace Social.Api.Endpoint
         {
             var group = app.MapGroup("/api/posts").WithTags("Posts");
 
+            group.MapPost("", CreateAsync);
             group.MapGet("", GetPageAsync);
             group.MapGet("/{id:guid}", GetByIdAsync);
-            group.MapPost("", CreateAsync);
             group.MapPut("/{id:guid}/content", UpdateContentAsync);
-            group.MapDelete("/{id:guid}", DeleteAsync);
+            group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization();
 
             return group;
         }
 
-        private static async Task<IResult> CreateAsync(CreatePostRequest request, PostService service, CancellationToken cancellationToken)
+        private static async Task<IResult> CreateAsync(CreatePostRequest request, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
+            if(!TryGetCurrentUserId(user, out var currentUserID))
+            {
+                return Results.Unauthorized();
+            }
+
             try
             {
-                var post = await service.CreateAsync(request.AuthorId, request.Content, cancellationToken);
+                var post = await service.CreateAsync(currentUserID, request.Content, cancellationToken);
 
                 return Results.Ok(post);
             }
@@ -67,11 +73,16 @@ namespace Social.Api.Endpoint
             }
         }
 
-        private static async Task<IResult> UpdateContentAsync(Guid id, UpdatePostRequest request, PostService service, CancellationToken cancellationToken)
+        private static async Task<IResult> UpdateContentAsync(Guid id, UpdatePostRequest request, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
+            if (!TryGetCurrentUserId(user, out var currentUserId))
+            {
+                return Results.Unauthorized();
+            }
+
             try
             {
-                var post = await service.UpdateContentAsync(id, request.Content, cancellationToken);
+                var post = await service.UpdateContentAsync(id, currentUserId, request.Content, cancellationToken);
 
                 if (post is null)
                 {
@@ -92,9 +103,14 @@ namespace Social.Api.Endpoint
             }
         }
 
-        private static async Task<IResult> DeleteAsync(Guid id, PostService service, CancellationToken cancellationToken)
+        private static async Task<IResult> DeleteAsync(Guid id, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            var deleted = await service.DeleteAsync(id, cancellationToken);
+            if(!TryGetCurrentUserId(user, out var currentUserId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var deleted = await service.DeleteAsync(id, currentUserId, cancellationToken);
 
             if (!deleted)
             {
@@ -105,6 +121,13 @@ namespace Social.Api.Endpoint
             }
 
             return Results.NoContent();
+        }
+
+        private static bool TryGetCurrentUserId(ClaimsPrincipal user, out Guid userId)
+        {
+            var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return Guid.TryParse(value, out userId) && userId != Guid.Empty;
         }
 
     }

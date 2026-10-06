@@ -2,6 +2,10 @@
 @postId = 6738d332-2ed6-4f19-8fd9-7ea0a5957607
 @deletePostId = 6738d332-2ed6-4f19-8fd9-7ea0a5957607
 
+@tokenA = CfDJ8BKHkEPIFZxJlFDI7YlckWIN3fQ7iY8OffwI5bMCYKO0S980S5gJU_9z6auieiaOPJgp52gaRGr3szNKX5e5YFTdh-wcrNnEnbp_JdsDzL1HhYZIk4YPbDp4R79wM78xbWVdxKlRRx-6NqLgbbfPDGGdGeGoWS38TNbFUiFfYuMOHeSxUd9UW9DXgAdtnR_dZhY_-zn71ShqayPJcAifUXbhB-_2GBRUM5m0MwwEv9MiREoW8are8xvWS3UEGAktpgk_wFjLqRfVsrJx9PFuSnnW2uW7tBuFr7w9l829p1_Wnzn8ZeZSKGeSh2oTslk65EgqDuPznfMFVCUdLVA9we0Zg8bfTAfVYFwBsQ2MxSSxJ1m9SpiuKnKl6oDjMiZgh0iZa4jq0QJITLDSQJFxmx-9PzP6lgaiu8lC9XcNAChisz7nkUvSZV5vF3oU_Qo_u2Mpdh0rMQfbgGJYlD9z9y2qRUK7WkOV3Ev4NKW7lrMi4obXLlRtsqaRKGQpFeinnwNx6oKBvmZW9YLpJoOYV33FM2tEZohmJnnczUCF8nYf3AaCKBMlaFMuiG7I46E-0fank3VGcqqUGMWdBEvex9Q9e19Judk4sN4_qhxke431b7AsB732CCuWGHf7o1FL962HqcFyB3I8vG4B4Sw6L1SSxC1hsZzZqINlAVDRWRTu2lO5vkyCF2IuIiYHHPxHzSdgnydCrbtYeFhUZFFtl_mAPCYCVLYYVrg1lyC3oeVa
+@tokenB = CfDJ8BKHkEPIFZxJlFDI7YlckWKji9wkKC0jGq7FhxTaHytwSFfMxgn98Vq_mkMiAgI9k70PUB2os6GUcV71VIk6KV35LBx7TpcrUb-3DKqRSIsjmySdNgsqWrc_8aydb783MnOjmv_OLKcE4w-JxwryN5GaWLhOtgTeFEYAFZz4J7U8Tx8Wvj5oOpbI9PbZp-bUrVoA0CiyscJT5B5aarpWWZfb3N_SW5hnyrwT9gVrf54gdqe9Hfqv2eOCMlDLwVoiUhGjqHukLBfN_HAlsFuBM013E8K6PWeFRB17m7A_XZtOQ3r27QR8NDZv5ktqB92YQ-KT7FCs3iXtsaBbutaVrSuqhy6TDm_lrWQGbsA4xOidkzAxSEgmu5iAyKzRk_1Qa5IqRwJYzW_rq4_WnAOAC3BfNMNzuUpevyDRdrjaWfOaUe0nsruyxb0zFYPaL-JTAvCs1d1Lsfi9qak9noZyGvulb8XVzV_nYKpu_73Xlf4_NoahNLRimNuFsKCDjs78Jlo1i59CPzpSK7Ldib84EfbSwsgJ53JiALOgw2uW0jBsq0ZPis7TVsRCrwIz42xdjSMKHyVn1H3o6jc90-4gE_xaHmq4SmfHacG-rrlimR20tsAiYxTZGz8NakLQLGGBKkKCqFuzDjok73xuCljYlosdpvYsTzWcjVWLJV-VAD3IGAYsOMFVsS1tvm3MigRPG_XMEmmqs0rG-f3fYcSqhrO1EGo7zrhMDA67QXfmR-qf
+@postId = ee47ae98-678b-4b9a-a4c9-4db775796a66
+
 ### Tao bai viet
 POST {{baseUrl}}/api/posts
 Content-Type: application/json
@@ -48,3 +52,30 @@ DELETE {{baseUrl}}/api/posts/{{deletePostId}}
 
 ### Kiem tra sau khi xoa
 GET {{baseUrl}}/api/posts/{{deletePostId}}
+
+
+
+### A tao bai viet
+POST {{baseUrl}}/api/posts
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "content": "Bài viết của tài khoản A."
+}
+
+### B thu sua bai cua A
+PUT {{baseUrl}}/api/posts/{{postId}}/content
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "content": "Nội dung do B thử thay đổi."
+}
+
+### B thu xoa bai cua A
+DELETE {{baseUrl}}/api/posts/{{postId}}
+Authorization: Bearer {{tokenB}}
+
+### Doc lai bai de kiem tra
+GET {{baseUrl}}/api/posts/{{postId}}

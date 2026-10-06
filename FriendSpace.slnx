@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Social.Api/Social.Api.csproj" />
+  <Project Path="Social.Application/Social.Application.csproj" />
+  <Project Path="Social.Domain/Social.Domain.csproj" />
+  <Project Path="Social.Infrastructure/Social.Infrastructure.csproj" />
+</Solution>

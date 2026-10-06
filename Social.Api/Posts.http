@@ -1,0 +1,50 @@
+@baseUrl = https://localhost:7192
+@postId = 6738d332-2ed6-4f19-8fd9-7ea0a5957607
+@deletePostId = 6738d332-2ed6-4f19-8fd9-7ea0a5957607
+
+### Tao bai viet
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+
+{
+  "authorId": "11111111-1111-1111-1111-111111111111",
+  "content": "Bài viết đầu tiên của tôi!"
+}
+
+### Kiem tra ket noi PostgreSQL
+GET {{baseUrl}}/dev/database
+
+### Doc bai viet theo ID
+GET {{baseUrl}}/api/posts/{{postId}}
+
+### Trang 1, moi trang 2 bai
+GET {{baseUrl}}/api/posts?pageNumber=1&pageSize=2
+
+### Trang 2, moi trang 2 bai
+GET {{baseUrl}}/api/posts?pageNumber=2&pageSize=2
+
+### So trang khong hop le
+GET {{baseUrl}}/api/posts?pageNumber=0&pageSize=2
+
+### So bai moi trang vuot gioi han
+GET {{baseUrl}}/api/posts?pageNumber=1&pageSize=51
+
+### Sua noi dung bai viet
+PUT {{baseUrl}}/api/posts/{{postId}}/content
+Content-Type: application/json
+
+{
+  "content": "Tôi vừa cập nhật nội dung bài viết!"
+}
+
+### Doc lai bai viet sau khi sua
+GET {{baseUrl}}/api/posts/{{postId}}
+
+### Xem bai viet truoc khi xoa
+GET {{baseUrl}}/api/posts/{{deletePostId}}
+
+### Xoa bai viet
+DELETE {{baseUrl}}/api/posts/{{deletePostId}}
+
+### Kiem tra sau khi xoa
+GET {{baseUrl}}/api/posts/{{deletePostId}}

@@ -1,0 +1,412 @@
+﻿@page "/"
+@using FriendSpace.Web.Models
+@using FriendSpace.Web.Services
+@inject SocialApiClient Api
+
+<PageTitle>FriendSpace</PageTitle>
+
+<div class="feed-shell">
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">FriendSpace</h1>
+            <p class="text-muted mb-0">Chia sẻ những điều đang diễn ra.</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-outline-primary"
+                disabled="@_busy"
+                @onclick="() => RunAsync(LoadPostsAsync)">
+            Tải lại
+        </button>
+    </header>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+
+    @if (_success is not null)
+    {
+        <div class="alert alert-success" role="status">@_success</div>
+    }
+
+    @if (_busy)
+    {
+        <p class="text-muted" role="status">Đang xử lý...</p>
+    }
+
+    <div class="row g-4">
+        <aside class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Tài khoản</h2>
+
+                    @if (Api.IsLoggedIn)
+                    {
+                        <p class="account-email">@Api.CurrentUser!.Email</p>
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                disabled="@_busy"
+                                @onclick="Logout">
+                            Đăng xuất
+                        </button>
+                    }
+                    else
+                    {
+                        <label for="login-email" class="form-label">
+                            Email
+                        </label>
+
+                        <input id="login-email"
+                               class="form-control mb-3"
+                               type="email"
+                               autocomplete="username"
+                               disabled="@_busy"
+                               @bind="_email"
+                               @bind:event="oninput" />
+
+                        <label for="login-password" class="form-label">
+                            Mật khẩu
+                        </label>
+
+                        <input id="login-password"
+                               class="form-control mb-3"
+                               type="password"
+                               autocomplete="current-password"
+                               disabled="@_busy"
+                               @bind="_password"
+                               @bind:event="oninput" />
+
+                        <div class="d-grid gap-2">
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    disabled="@(_busy || AccountInputEmpty)"
+                                    @onclick="() => RunAsync(LoginAsync)">
+                                Đăng nhập
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline-primary"
+                                    disabled="@(_busy || AccountInputEmpty)"
+                                    @onclick="() => RunAsync(RegisterAsync)">
+                                Tạo tài khoản
+                            </button>
+                        </div>
+
+                        <p class="small text-muted mt-3 mb-0">
+                            Mật khẩu đăng ký cần ít nhất 8 ký tự,
+                            gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+                        </p>
+                    }
+                </div>
+            </div>
+        </aside>
+
+        <section class="col-lg-8">
+            @if (Api.IsLoggedIn)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="h5">Bạn muốn chia sẻ điều gì?</h2>
+
+                        <textarea class="form-control mb-3"
+                                  rows="3"
+                                  aria-label="Nội dung bài viết"
+                                  disabled="@_busy"
+                                  @bind="_newContent"
+                                  @bind:event="oninput"></textarea>
+
+                        <button type="button"
+                                class="btn btn-primary"
+                                disabled="@(_busy || string.IsNullOrWhiteSpace(_newContent))"
+                                @onclick="() => RunAsync(CreatePostAsync)">
+                            Đăng bài
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (_posts.Count == 0 && !_busy)
+            {
+                <div class="card border-0 shadow-sm p-4 text-muted">
+                    Trang này chưa có bài viết.
+                </div>
+            }
+
+            @foreach (var post in _posts)
+            {
+                <article @key="post.Id"
+                         class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="member-avatar">F</div>
+
+                            <div>
+                                <strong>
+                                    @(IsOwner(post) ? "Bạn" : "Thành viên")
+                                </strong>
+
+                                <div class="small text-muted">
+                                    @FormatTime(post.CreatedAt)
+
+                                    @if (post.UpdatedAt is not null)
+                                    {
+                                        <span> · Đã chỉnh sửa</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (_editingId == post.Id && IsOwner(post))
+                        {
+                            <textarea class="form-control mb-3"
+                                      rows="4"
+                                      aria-label="Nội dung chỉnh sửa"
+                                      disabled="@_busy"
+                                      @bind="_editContent"
+                                      @bind:event="oninput"></textarea>
+
+                            <button type="button"
+                                    class="btn btn-primary btn-sm"
+                                    disabled="@(_busy || string.IsNullOrWhiteSpace(_editContent))"
+                                    @onclick="() => RunAsync(() => SavePostAsync(post.Id))">
+                                Lưu
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm ms-2"
+                                    disabled="@_busy"
+                                    @onclick="CancelEdit">
+                                Hủy
+                            </button>
+                        }
+                        else
+                        {
+                            <p class="post-content">@post.Content</p>
+
+                            @if (IsOwner(post))
+                            {
+                                <div class="d-flex gap-2">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            disabled="@_busy"
+                                            @onclick="() => StartEdit(post)">
+                                        Sửa
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm"
+                                            disabled="@_busy"
+                                            @onclick="() => _pendingDeleteId = post.Id">
+                                        Xóa
+                                    </button>
+                                </div>
+                            }
+                        }
+
+                        @if (_pendingDeleteId == post.Id && IsOwner(post))
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <p>Xóa bài viết này và các bình luận của bài?</p>
+
+                                <button type="button"
+                                        class="btn btn-danger btn-sm"
+                                        disabled="@_busy"
+                                        @onclick="() => RunAsync(() => DeletePostAsync(post.Id))">
+                                    Xác nhận xóa
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm ms-2"
+                                        disabled="@_busy"
+                                        @onclick="() => _pendingDeleteId = null">
+                                    Hủy
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        disabled="@(_busy || _page == 1)"
+                        @onclick="() => RunAsync(() => ChangePageAsync(-1))">
+                    Trang trước
+                </button>
+
+                <span>Trang @_page</span>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        disabled="@(_busy || _posts.Count < PageSize)"
+                        @onclick="() => RunAsync(() => ChangePageAsync(1))">
+                    Trang sau
+                </button>
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private const int PageSize = 10;
+
+    private List<ApiModels.PostItem> _posts = new();
+    private int _page = 1;
+    private bool _busy;
+
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string _newContent = string.Empty;
+    private string _editContent = string.Empty;
+
+    private Guid? _editingId;
+    private Guid? _pendingDeleteId;
+
+    private string? _error;
+    private string? _success;
+
+    private bool AccountInputEmpty =>
+        string.IsNullOrWhiteSpace(_email) ||
+        string.IsNullOrWhiteSpace(_password);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RunAsync(LoadPostsAsync);
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        _posts = await Api.GetPostsAsync(_page, PageSize);
+    }
+
+    private async Task LoginAsync()
+    {
+        await Api.LoginAsync(_email.Trim(), _password);
+
+        _password = string.Empty;
+        _success = "Đăng nhập thành công.";
+    }
+
+    private async Task RegisterAsync()
+    {
+        await Api.RegisterAsync(_email.Trim(), _password);
+        await LoginAsync();
+
+        _success = "Đã tạo tài khoản và đăng nhập.";
+    }
+
+    private void Logout()
+    {
+        Api.Logout();
+
+        _password = string.Empty;
+        _newContent = string.Empty;
+        _editingId = null;
+        _pendingDeleteId = null;
+        _error = null;
+        _success = "Đã đăng xuất.";
+    }
+
+    private async Task CreatePostAsync()
+    {
+        await Api.CreatePostAsync(_newContent);
+
+        _newContent = string.Empty;
+        _page = 1;
+        _success = "Đã đăng bài viết.";
+
+        await LoadPostsAsync();
+    }
+
+    private void StartEdit(ApiModels.PostItem post)
+    {
+        _editingId = post.Id;
+        _editContent = post.Content;
+        _pendingDeleteId = null;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _editContent = string.Empty;
+    }
+
+    private async Task SavePostAsync(Guid id)
+    {
+        await Api.UpdatePostAsync(id, _editContent);
+
+        CancelEdit();
+        _success = "Đã cập nhật bài viết.";
+
+        await LoadPostsAsync();
+    }
+
+    private async Task DeletePostAsync(Guid id)
+    {
+        await Api.DeletePostAsync(id);
+
+        _pendingDeleteId = null;
+        _success = "Đã xóa bài viết.";
+
+        await LoadPostsAsync();
+
+        if (_posts.Count == 0 && _page > 1)
+        {
+            _page--;
+            await LoadPostsAsync();
+        }
+    }
+
+    private async Task ChangePageAsync(int direction)
+    {
+        _page = Math.Max(1, _page + direction);
+        _editingId = null;
+        _pendingDeleteId = null;
+
+        await LoadPostsAsync();
+    }
+
+    private bool IsOwner(ApiModels.PostItem post)
+    {
+        return Api.CurrentUser?.Id == post.AuthorId;
+    }
+
+    private static string FormatTime(DateTimeOffset value)
+    {
+        return value
+            .ToOffset(TimeSpan.FromHours(7))
+            .ToString("dd/MM/yyyy HH:mm");
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _error = null;
+        _success = null;
+
+        try
+        {
+            await action();
+        }
+        catch (TaskCanceledException)
+        {
+            _error = "API phản hồi quá lâu. Bạn hãy thử lại.";
+        }
+        catch (Exception exception)
+        {
+            _error = exception.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

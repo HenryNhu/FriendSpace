@@ -44,10 +44,7 @@ if (app.Environment.IsDevelopment())
     app.MapDevelopmentEndpoints();
 }
 
-app.MapGroup("/api/auth")
-    .WithTags("Auth")
-    .MapIdentityApi<ApplicationUser>();
-
+app.MapAuthEndpoints();
 app.MapPostEndpoints();
 app.MapCommentEndpoints();
 

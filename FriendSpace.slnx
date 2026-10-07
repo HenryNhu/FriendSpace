@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="FriendSpace.Web/FriendSpace.Web.csproj" Id="3d6a8304-b3ab-45ba-93ae-2ec7588dcc1d" />
   <Project Path="Social.Api/Social.Api.csproj" />
   <Project Path="Social.Application/Social.Application.csproj" />
   <Project Path="Social.Domain/Social.Domain.csproj" />

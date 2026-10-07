@@ -17,7 +17,6 @@ namespace Social.Api.Endpoint
             group.MapGet("/{id:guid}", GetByIdAsync);
             group.MapPut("/{id:guid}/content", UpdateContentAsync);
             group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization();
-            group.MapPost("/{id:guid}/comments", CreateCommentAsync).RequireAuthorization();
 
             return group;
         }

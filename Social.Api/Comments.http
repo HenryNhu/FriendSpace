@@ -1,0 +1,33 @@
+@baseUrl = https://localhost:7192
+@postId = 50f68487-5d45-4cfc-9211-a162f9208790
+@commentId = b953c707-5e06-4156-8e77-ae027a5ed71b
+@tokenA = CfDJ8BKHkEPIFZxJlFDI7YlckWKuPiIMk-tOXkMTMGbl7YqkTD0ANhFI8wHe9BX_TDArMuz_Uj8tevGm6q2UzrY77KF65_QQD0QgB-_hBc_c52W4t3tPO4X-o3eFTjHir1RkH4bzA5VA8oaeXu8cRtryJpuaUzxjPDBRjNmuYBHJYmGytdh4OqN8LBelh-RkrNPV3GOLVOtDcy9eiR9aFGNydL_bLnZCk72KT1Dat06rrSKjRlbXakgPpOCg7sl8mO6_cm2Ixw3mR0zTlEnN9nq9OcvOIpgGqWBv4bKIG3hnu8dgpeZCC4n--tTC1ui64POfrlOPVigU2uZqw_hfOSZhhzOsEQDgKYSDMd10VNC2mfEeqYOP3cjGM5Y09mY3PEsCUfQeV9K-fAJSQ4afpuZhMTF-KhysD-2UeT8h4uFTup9khM6wgw4RdZNFoMvA8zco1hmRk5wQjpKb2v30q1aQj_hoxVNUnoRwb3EJlyf1DA1j7flE-nBxaBgkEc6CKEr1BXZ5pFdp-EjP54Chl_SL7od7tLCsUEfKMk6BDRsD3RWnARVN8cPu5ts7bsFHljtRGM7Cr42mOOyAML8VUrelYOg4YQqthzwimRW1wbZbcg9M4DwdktX-XRPoS9kTjrMWVLtq8Dg1-n22_fmCv7S2sG6oJI6qnz2g361xBoQw1wWSH8gWr-olHN67iWmh6XNeK8pYIN01lZHcp7CgiayuGFRf-WGCzzD6dlesRIaMohrS
+@tokenB = CfDJ8BKHkEPIFZxJlFDI7YlckWIzjJWHOcYWjGmxHytOpbI2rtM9M_TcLYGP7JiIOF6DysQ4n9rXsW5ffn0R-9fCpGPBz6gJmkOm2wuw77cTdfP4AT_RNzC3z-VnJqNU0K3OPTwkypxSBK7z5fJWi9z3buNCEQI13udU39sFhymsDdw8kYpH30lLMS5rMu1T9zL052yOFwVprwyDH7XYhCvL5n_MtfBZ4IcJaK9wj5Vsyk8gmo1xbl-51gLy8s3upP-uieknSnwKmjv8nSXeOB4Wb5AQdxNFOWyLdCNlzxbv0ZDaIuHylVcKzO4hgm0VR6lyf636c_sekVNxpbx343Jdb_YlyYs4MVSRjr8a7-DACkw5tgc4WHh91NrxFyEWvT6s7-of8A6x85GTtG2LrRXWkevnVfSTgzoYYhfd7Hwe6iOf90zkB48pn368KxoUpIXErfs5uvDiZoIXXWVd3KznbIdb2NDG0h7piAa2Ku8hoG4EJi0PgCZlYaAg_6dAYlSf50VboDEqnRqrciksEAOKZIsi3PIAyVk39rsRhuYznFDjBUAoSHz_iXKf3l7gSSnEXwDpGVQu-4jJ5xq4Pka6_wIfz2JPiAZNQ4NXPwDExG_kK9hhWcqqhRYusGaqOtzUvHAzJO9T8Zu8MkC24k7KpBKxPwMtwFrbBtw7SzitaJCiQaaI4OYNXvSCEybgHftazUSHnT8pR8VI_ybmwQ8qNa1S880m56siTdykPcNqJvqR
+
+### B tao binh luan
+POST {{baseUrl}}/api/posts/{{postId}}/comments
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "content": "Bình luận của A."
+}
+
+### Danh sach binh luan
+GET {{baseUrl}}/api/posts/{{postId}}/comments?pageNumber=1&pageSize=20
+
+### Doc chi tiet
+GET {{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}
+
+### B sua binh luan cua minh
+PUT {{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}/content
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "content": "B đã chỉnh sửa bình luận."
+}
+
+### B xoa binh luan cua minh
+DELETE {{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}
+Authorization: Bearer {{tokenB}}

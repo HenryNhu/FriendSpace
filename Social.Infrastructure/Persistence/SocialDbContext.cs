@@ -17,6 +17,7 @@ namespace Social.Infrastructure.Persistence
         }
 
         public DbSet<Post> Posts => Set<Post>();
+        public DbSet<Comment> Comments => Set<Comment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,9 +29,30 @@ namespace Social.Infrastructure.Persistence
 
                 entity.HasKey(post => post.Id);
 
-                entity.Property(post => post.Id).ValueGeneratedNever();
+                entity.Property(post => post.Id)
+                        .ValueGeneratedNever();
 
-                entity.Property(post => post.Content).IsRequired();
+                entity.Property(post => post.Content)
+                        .IsRequired();
+            });
+
+            modelBuilder.Entity<Comment>(entity =>
+            {
+                entity.ToTable("comments");
+
+                entity.HasKey(comment => comment.Id);
+
+                entity.Property(comment => comment.Id)
+                        .ValueGeneratedNever();
+
+                entity.Property(comment => comment.Content)
+                        .HasMaxLength(Comment.MaxContentLength)
+                        .IsRequired();
+
+                entity.HasOne<Post>()
+                        .WithMany()
+                        .HasForeignKey(comment => comment.PostId)
+                        .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

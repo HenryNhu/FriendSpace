@@ -35,7 +35,7 @@ namespace Social.Infrastructure.Persistence.Repositories
             return await _dbContext.Posts
                 .AsNoTracking()
                 .OrderByDescending(post => post.CreatedAt)
-                .ThenByDescending(post => post.Id)
+                .ThenByDescending(post => post.Id) 
                 .Skip(skip)
                 .Take(take)
                 .ToListAsync(cancellationToken);

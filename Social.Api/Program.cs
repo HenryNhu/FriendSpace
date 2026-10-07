@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Social.Api.Contracts;
 using Social.Api.Endpoint;
 using Social.Application.Abstractions;
+using Social.Application.Comments;
 using Social.Application.Posts;
 using Social.Infrastructure.Identity;
 using Social.Infrastructure.Persistence;
@@ -26,6 +27,8 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<PostService>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<CommentService>();
 
 var app = builder.Build();
 
@@ -46,5 +49,6 @@ app.MapGroup("/api/auth")
     .MapIdentityApi<ApplicationUser>();
 
 app.MapPostEndpoints();
+app.MapCommentEndpoints();
 
 app.Run();

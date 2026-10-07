@@ -80,3 +80,12 @@ Authorization: Bearer {{tokenB}}
 
 ### Doc lai bai de kiem tra
 GET {{baseUrl}}/api/posts/{{postId}}
+
+### B binh luan vao bai cua A
+POST {{baseUrl}}/api/posts/{{postId}}/comments
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "content": "Đây là bình luận đầu tiên của tôi!"
+}

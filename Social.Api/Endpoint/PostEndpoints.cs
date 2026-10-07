@@ -1,4 +1,6 @@
-﻿using Social.Api.Contracts;
+﻿using Social.Api.Authentication;
+using Social.Api.Contracts;
+using Social.Application.Comments;
 using Social.Application.Posts;
 using System.Security.Claims;
 
@@ -21,7 +23,7 @@ namespace Social.Api.Endpoint
 
         private static async Task<IResult> CreateAsync(CreatePostRequest request, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            if(!TryGetCurrentUserId(user, out var currentUserID))
+            if(!user.TryGetCurrentUserId(out var currentUserID))
             {
                 return Results.Unauthorized();
             }
@@ -75,7 +77,7 @@ namespace Social.Api.Endpoint
 
         private static async Task<IResult> UpdateContentAsync(Guid id, UpdatePostRequest request, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            if (!TryGetCurrentUserId(user, out var currentUserId))
+            if (!user.TryGetCurrentUserId(out var currentUserId))
             {
                 return Results.Unauthorized();
             }
@@ -105,7 +107,7 @@ namespace Social.Api.Endpoint
 
         private static async Task<IResult> DeleteAsync(Guid id, PostService service, ClaimsPrincipal user, CancellationToken cancellationToken)
         {
-            if(!TryGetCurrentUserId(user, out var currentUserId))
+            if(!user.TryGetCurrentUserId(out var currentUserId))
             {
                 return Results.Unauthorized();
             }
@@ -122,13 +124,5 @@ namespace Social.Api.Endpoint
 
             return Results.NoContent();
         }
-
-        private static bool TryGetCurrentUserId(ClaimsPrincipal user, out Guid userId)
-        {
-            var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            return Guid.TryParse(value, out userId) && userId != Guid.Empty;
-        }
-
     }
 }

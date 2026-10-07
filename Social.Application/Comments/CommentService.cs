@@ -101,7 +101,7 @@ namespace Social.Application.Comments
         }
 
         public async Task<bool> DeleteAsync(Guid postId, Guid commentId, Guid currentUserId, CancellationToken cancellationToken = default)
-        {
+            {
             return await _commentRepository.DeleteAsync(postId, commentId, currentUserId, cancellationToken);
         }
 

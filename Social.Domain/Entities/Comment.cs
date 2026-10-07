@@ -53,7 +53,7 @@ namespace Social.Domain.Entities
         }
 
         private static string NormalizeContent(string content)
-        {
+            {
             if (string.IsNullOrWhiteSpace(content))
             {
                 throw new ArgumentException("Nội dung bình luận không được để trống.", nameof(content));

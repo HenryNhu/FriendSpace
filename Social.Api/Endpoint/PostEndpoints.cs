@@ -1,4 +1,5 @@
 ﻿using Social.Api.Contracts;
+using Social.Application.Comments;
 using Social.Application.Posts;
 using System.Security.Claims;
 
@@ -15,6 +16,7 @@ namespace Social.Api.Endpoint
             group.MapGet("/{id:guid}", GetByIdAsync);
             group.MapPut("/{id:guid}/content", UpdateContentAsync);
             group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization();
+            group.MapPost("/{id:guid}/comments", CreateCommentAsync).RequireAuthorization();
 
             return group;
         }
@@ -128,6 +130,45 @@ namespace Social.Api.Endpoint
             var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             return Guid.TryParse(value, out userId) && userId != Guid.Empty;
+        }
+
+        private static async Task<IResult> CreateCommentAsync(
+    Guid id,
+    CreateCommentRequest request,
+    CommentService service,
+    ClaimsPrincipal user,
+    CancellationToken cancellationToken)
+        {
+            if (!TryGetCurrentUserId(user, out var currentUserId))
+            {
+                return Results.Unauthorized();
+            }
+
+            try
+            {
+                var comment = await service.CreateAsync(
+                    id,
+                    currentUserId,
+                    request.Content,
+                    cancellationToken);
+
+                if (comment is null)
+                {
+                    return Results.NotFound(new
+                    {
+                        message = "Không tìm thấy bài viết."
+                    });
+                }
+
+                return Results.Ok(comment);
+            }
+            catch (ArgumentException exception)
+            {
+                return Results.BadRequest(new
+                {
+                    message = exception.Message
+                });
+            }
         }
 
     }

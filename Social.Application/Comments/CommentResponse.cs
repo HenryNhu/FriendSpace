@@ -17,5 +17,7 @@ namespace Social.Application.Comments
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset? UpdatedAt { get; set; }
+
+        public string? AuthorDisplayName { get; set; }
     }
 }

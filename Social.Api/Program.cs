@@ -5,6 +5,7 @@ using Social.Application.Abstractions;
 using Social.Application.Comments;
 using Social.Application.PostLikes;
 using Social.Application.Posts;
+using Social.Application.UserProfiles;
 using Social.Infrastructure.Identity;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Repositories;
@@ -32,6 +33,8 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<IPostLikeRepository, PostLikeRepository>();
 builder.Services.AddScoped<PostLikeService>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+builder.Services.AddScoped<UserProfileService>();
 
 var app = builder.Build();
 
@@ -51,5 +54,6 @@ app.MapAuthEndpoints();
 app.MapPostEndpoints();
 app.MapCommentEndpoints();
 app.MapPostLikeEndpoints();
+app.MapUserProfileEndpoints();
 
 app.Run();

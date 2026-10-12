@@ -15,5 +15,7 @@ namespace Social.Application.Posts
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset? UpdatedAt { get; set; }
+
+        public string? AuthorDisplayName { get; set; }
     }
 }

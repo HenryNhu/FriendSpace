@@ -19,6 +19,7 @@ namespace Social.Infrastructure.Persistence
         public DbSet<Post> Posts => Set<Post>();
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<PostLike> PostLikes => Set<PostLike>();
+        public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,6 +83,30 @@ namespace Social.Infrastructure.Persistence
                         .HasForeignKey(like => like.PostId)
                         .HasConstraintName("fk_post_likes_posts_post_id")
                         .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserProfile>(entity =>
+            {
+                entity.ToTable("user_profiles");
+
+                entity.HasKey(profile => profile.UserId);
+
+                entity.Property(profile => profile.UserId)
+                    .ValueGeneratedNever();
+
+                entity.Property(profile => profile.DisplayName)
+                    .HasMaxLength(UserProfile.MaxDisplayNameLength)
+                    .IsRequired();
+
+                entity.Property(profile => profile.Bio)
+                    .HasMaxLength(UserProfile.MaxBioLength)
+                    .IsRequired();
+
+                entity.HasOne<ApplicationUser>()
+                    .WithOne()
+                    .HasForeignKey<UserProfile>(profile => profile.UserId)
+                    .HasConstraintName("fk_user_profiles_users_user_id")
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

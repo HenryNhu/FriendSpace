@@ -18,6 +18,7 @@ namespace Social.Infrastructure.Persistence
 
         public DbSet<Post> Posts => Set<Post>();
         public DbSet<Comment> Comments => Set<Comment>();
+        public DbSet<PostLike> PostLikes => Set<PostLike>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +53,34 @@ namespace Social.Infrastructure.Persistence
                 entity.HasOne<Post>()
                         .WithMany()
                         .HasForeignKey(comment => comment.PostId)
+                        .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<PostLike>(entity =>
+            {
+                entity.ToTable("post_likes");
+
+                entity.HasKey(like => new
+                {
+                    like.PostId,
+                    like.UserId
+                });
+
+                entity.Property(like => like.PostId)
+                        .HasColumnName("PostId")
+                        .ValueGeneratedNever();
+
+                entity.Property(like => like.UserId)
+                        .HasColumnName("UserId")
+                        .ValueGeneratedNever();
+
+                entity.Property(like => like.CreatedAt)
+                        .HasColumnName("CreatedAt");
+
+                entity.HasOne<Post>()
+                        .WithMany()
+                        .HasForeignKey(like => like.PostId)
+                        .HasConstraintName("fk_post_likes_posts_post_id")
                         .OnDelete(DeleteBehavior.Cascade);
             });
         }

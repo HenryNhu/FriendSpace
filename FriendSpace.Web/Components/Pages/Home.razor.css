@@ -31,6 +31,29 @@
     line-height: 1.7;
 }
 
+.comments-panel {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1rem;
+}
+
+.comment-item {
+    border-bottom: 1px solid #f1f3f5;
+    padding: 0.75rem 0;
+}
+
+.comment-item:first-child {
+    padding-top: 0;
+}
+
+.comment-item:last-child {
+    border-bottom: 0;
+}
+
+.comment-content {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 .account-email {
     overflow-wrap: anywhere;
 }

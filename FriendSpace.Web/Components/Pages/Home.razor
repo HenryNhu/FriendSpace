@@ -185,9 +185,16 @@
                         {
                             <p class="post-content">@post.Content</p>
 
-                            @if (IsOwner(post))
-                            {
-                                <div class="d-flex gap-2">
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        disabled="@_busy"
+                                        @onclick="() => RunAsync(() => ToggleCommentsAsync(post.Id))">
+                                    @( _expandedCommentPostIds.Contains(post.Id) ? "Ẩn bình luận" : "Bình luận")
+                                </button>
+
+                                @if (IsOwner(post))
+                                {
                                     <button type="button"
                                             class="btn btn-outline-primary btn-sm"
                                             disabled="@_busy"
@@ -201,8 +208,8 @@
                                             @onclick="() => _pendingDeleteId = post.Id">
                                         Xóa
                                     </button>
-                                </div>
-                            }
+                                }
+                            </div>
                         }
 
                         @if (_pendingDeleteId == post.Id && IsOwner(post))
@@ -224,6 +231,69 @@
                                     Hủy
                                 </button>
                             </div>
+                        }
+
+                        @if (_expandedCommentPostIds.Contains(post.Id))
+                        {
+                            <section class="comments-panel mt-4" aria-label="Bình luận">
+                                <h3 class="h6 mb-3">Bình luận</h3>
+
+                                @if (_commentsByPost.TryGetValue(post.Id, out var comments) && comments.Count > 0)
+                                {
+                                    <div class="comments-list">
+                                        @foreach (var comment in comments)
+                                        {
+                                            <div @key="comment.Id" class="comment-item">
+                                                <div class="d-flex justify-content-between gap-3">
+                                                    <strong>
+                                                        @(comment.AuthorId == Api.CurrentUser?.Id ? "Bạn" : "Thành viên")
+                                                    </strong>
+
+                                                    <span class="small text-muted">
+                                                        @FormatTime(comment.CreatedAt)
+
+                                                        @if (comment.UpdatedAt is not null)
+                                                        {
+                                                            <span> · Đã chỉnh sửa</span>
+                                                        }
+                                                    </span>
+                                                </div>
+
+                                                <p class="comment-content mb-0 mt-1">@comment.Content</p>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="small text-muted">Chưa có bình luận nào.</p>
+                                }
+
+                                @if (Api.IsLoggedIn)
+                                {
+                                    <div class="comment-composer mt-3">
+                                        <textarea class="form-control"
+                                                  rows="3"
+                                                  aria-label="Nội dung bình luận"
+                                                  disabled="@_busy"
+                                                  value="@GetNewComment(post.Id)"
+                                                  @oninput="eventArgs => SetNewComment(post.Id, eventArgs.Value?.ToString() ?? string.Empty)"></textarea>
+
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <button type="button"
+                                                    class="btn btn-primary btn-sm"
+                                                    disabled="@(_busy || string.IsNullOrWhiteSpace(GetNewComment(post.Id)))"
+                                                    @onclick="() => RunAsync(() => CreateCommentAsync(post.Id))">
+                                                Post
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="small text-muted mb-0">Đăng nhập để viết bình luận.</p>
+                                }
+                            </section>
                         }
                     </div>
                 </article>
@@ -252,8 +322,13 @@
 
 @code {
     private const int PageSize = 10;
+    private const int CommentsPageSize = 20;
 
     private List<ApiModels.PostItem> _posts = new();
+    private readonly HashSet<Guid> _expandedCommentPostIds = new();
+    private readonly HashSet<Guid> _loadedCommentPostIds = new();
+    private readonly Dictionary<Guid, List<ApiModels.CommentItem>> _commentsByPost = new();
+    private readonly Dictionary<Guid, string> _newCommentByPost = new();
     private int _page = 1;
     private bool _busy;
 
@@ -306,6 +381,7 @@
         _newContent = string.Empty;
         _editingId = null;
         _pendingDeleteId = null;
+        _newCommentByPost.Clear();
         _error = null;
         _success = "Đã đăng xuất.";
     }
@@ -319,6 +395,58 @@
         _success = "Đã đăng bài viết.";
 
         await LoadPostsAsync();
+    }
+
+    private async Task ToggleCommentsAsync(Guid postId)
+    {
+        if (!_expandedCommentPostIds.Add(postId))
+        {
+            _expandedCommentPostIds.Remove(postId);
+            return;
+        }
+
+        if (_loadedCommentPostIds.Contains(postId))
+        {
+            return;
+        }
+
+        _commentsByPost[postId] = await Api.GetCommentsAsync(
+            postId,
+            pageNumber: 1,
+            pageSize: CommentsPageSize);
+        _loadedCommentPostIds.Add(postId);
+    }
+
+    private string GetNewComment(Guid postId)
+    {
+        return _newCommentByPost.TryGetValue(postId, out var content)
+            ? content
+            : string.Empty;
+    }
+
+    private void SetNewComment(Guid postId, string content)
+    {
+        _newCommentByPost[postId] = content;
+    }
+
+    private async Task CreateCommentAsync(Guid postId)
+    {
+        var content = GetNewComment(postId);
+        var comment = await Api.CreateCommentAsync(postId, content);
+
+        if (comment is not null)
+        {
+            if (!_commentsByPost.TryGetValue(postId, out var comments))
+            {
+                comments = new List<ApiModels.CommentItem>();
+                _commentsByPost[postId] = comments;
+            }
+
+            comments.Add(comment);
+        }
+
+        _newCommentByPost.Remove(postId);
+        _success = "Đã đăng bình luận.";
     }
 
     private void StartEdit(ApiModels.PostItem post)
@@ -365,6 +493,10 @@
         _page = Math.Max(1, _page + direction);
         _editingId = null;
         _pendingDeleteId = null;
+        _expandedCommentPostIds.Clear();
+        _loadedCommentPostIds.Clear();
+        _commentsByPost.Clear();
+        _newCommentByPost.Clear();
 
         await LoadPostsAsync();
     }

@@ -204,6 +204,25 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("posts", (string)null);
                 });
 
+            modelBuilder.Entity("Social.Domain.Entities.PostLike", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("PostId");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("UserId");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.HasKey("PostId", "UserId");
+
+                    b.ToTable("post_likes", (string)null);
+                });
+
             modelBuilder.Entity("Social.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -327,6 +346,16 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.PostLike", b =>
+                {
+                    b.HasOne("Social.Domain.Entities.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_post_likes_posts_post_id");
                 });
 #pragma warning restore 612, 618
         }

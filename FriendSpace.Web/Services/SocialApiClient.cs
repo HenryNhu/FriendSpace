@@ -112,6 +112,31 @@ namespace FriendSpace.Web.Services
                 authenticated: true);
         }
 
+        public async Task<List<CommentItem>> GetCommentsAsync(
+            Guid postId,
+            int pageNumber = 1,
+            int pageSize = 20)
+        {
+            using var response = await SendAsync(
+                HttpMethod.Get,
+                $"api/posts/{postId}/comments?pageNumber={pageNumber}&pageSize={pageSize}");
+
+            return await response.Content
+                .ReadFromJsonAsync<List<CommentItem>>()
+                ?? new List<CommentItem>();
+        }
+
+        public async Task<CommentItem?> CreateCommentAsync(Guid postId, string content)
+        {
+            using var response = await SendAsync(
+                HttpMethod.Post,
+                $"api/posts/{postId}/comments",
+                new { content },
+                authenticated: true);
+
+            return await response.Content.ReadFromJsonAsync<CommentItem>();
+        }
+
         private async Task<HttpResponseMessage> SendAsync(
             HttpMethod method,
             string path,

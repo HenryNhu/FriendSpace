@@ -1,0 +1,18 @@
+@baseUrl = https://localhost:7192
+@accessToken = CfDJ8BKHkEPIFZxJlFDI7YlckWJ8s-XczWg33FtYJXaBwUNfa2QPLJAVp2xFwzxPnggmU_7KX8N7HgxTkdwXSUQB3UmcmobU3KmskSi5_PLZK3-5zVBWjqXmM3Ap_W2Tf5cexKur9Bh1OoSqjRQjd6GVcXdgtQ0zYsOtt_zImAkymQHfS-zf-bwKRcP3Vo4IxenzoV-_bsoVOgY0KKKGnpEVWQFUt0suMJHQcvJeyaMGSwRIzMII4oGlBfA7CP0j9E1R01x_9RljHOP3nemCQ2JBTKANbzp_KPun1TdZ7ZP2Sxlv2ZEo7EN2kEA0X6yBb9tHeuvN7zbtkfyDas2p_kO20F-GLIfEtBoyAf53LLax30WokCwCvkRXJ2SK6mf5Dubif4sIYysMdkqOkK-H7wyQqQURLTCN3dRMC8Yhs0btFFJ9sp39R76k-oqpBt9bpL26THN309c0JK2LJMcniSK8EZwuAulg3X8hXxhAyliR5cRj287AWIffdlq_4kjx9eJ_K6xWNeRtap8Ny8dcoLTlEAsklBNTSJ-43PqDiYkpjH30swGBHf7n2y9EMaP1PQ3gxb4Kq58VDDs7mcN_4f_GgQR7UNdpUOWa2RI4R_5X-nAFzmRLQhKwIBUXc45qRRCh6stf8KHlXg6uUJ6DWZV80hEZzK2mtsm00jUrU_wLqX2fEbiKPsTkdgyq3OGIfbzm5dm-Xl4EVLHhSxbcMVfgj-xBAJanodHoNFHcCg3Ld_Y2
+@postId = da5cc001-4452-4c0f-a827-c2c085727d2d
+
+### Thích bài viết
+PUT {{baseUrl}}/api/posts/{{postId}}/likes/me
+Authorization: Bearer {{accessToken}}
+
+### Xem số lượt thích và trạng thái của tôi
+GET {{baseUrl}}/api/posts/{{postId}}/likes
+Authorization: Bearer {{accessToken}}
+
+### Bỏ thích bài viết
+DELETE {{baseUrl}}/api/posts/{{postId}}/likes/me
+Authorization: Bearer {{accessToken}}
+
+### Xem số lượt thích khi chưa đăng nhập
+GET {{baseUrl}}/api/posts/{{postId}}/likes

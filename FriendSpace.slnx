@@ -1,4 +1,8 @@
 <Solution>
+  <Project Path="friendspace-client/friendspace-client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
   <Project Path="Social.Api/Social.Api.csproj" />
   <Project Path="Social.Application/Social.Application.csproj" />
   <Project Path="Social.Domain/Social.Domain.csproj" />

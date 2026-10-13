@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Social.Api.Authentication;
 using Social.Api.Contracts;
 using Social.Api.Endpoint;
 using Social.Application.Abstractions;
@@ -19,13 +20,9 @@ var connectionString = builder.Configuration
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SocialDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services
-    .AddIdentityApiEndpoints<ApplicationUser>(options =>
-    {
-        options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
-    })
-    .AddEntityFrameworkStores<SocialDbContext>();
+
+builder.Services.AddFriendSpaceAuthentication();
+builder.Services.AddBrowserSecurity();
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<PostService>();
@@ -42,6 +39,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseBrowserCsrf();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -50,6 +48,7 @@ if (app.Environment.IsDevelopment())
     app.MapDevelopmentEndpoints();
 }
 
+// Add Endpoint 
 app.MapAuthEndpoints();
 app.MapPostEndpoints();
 app.MapCommentEndpoints();

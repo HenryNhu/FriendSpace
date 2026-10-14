@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Social.Api.Authentication;
+using Social.Api.Media;
+using Social.Application.Friendships;
 using Social.Api.Contracts;
 using Social.Api.Endpoint;
 using Social.Application.Abstractions;
@@ -22,8 +24,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SocialDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddFriendSpaceAuthentication();
-builder.Services.AddBrowserSecurity();
-builder.Services.AddAuthorization();
+
+
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<PostService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
@@ -32,6 +34,9 @@ builder.Services.AddScoped<IPostLikeRepository, PostLikeRepository>();
 builder.Services.AddScoped<PostLikeService>();
 builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<UserProfileService>();
+builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+builder.Services.AddScoped<FriendshipService>();
+builder.Services.AddFriendSpaceMedia(builder.Configuration);
 
 var app = builder.Build();
 
@@ -40,6 +45,13 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseBrowserCsrf();
+// Responses depend on the current cookie and friendship/privacy state.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+        context.Response.Headers.CacheControl = "private, no-store";
+    await next(context);
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -54,5 +66,7 @@ app.MapPostEndpoints();
 app.MapCommentEndpoints();
 app.MapPostLikeEndpoints();
 app.MapUserProfileEndpoints();
+app.MapFriendshipEndpoints();
+app.MapMediaEndpoints();
 
 app.Run();

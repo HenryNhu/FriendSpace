@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Social.Domain.Entities;
@@ -12,11 +12,13 @@ namespace Social.Infrastructure.Persistence
     public class SocialDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public SocialDbContext(DbContextOptions<SocialDbContext> options) : base(options)
-        { 
-            
+        {
+
         }
 
         public DbSet<Post> Posts => Set<Post>();
+        public DbSet<Friendship> Friendships => Set<Friendship>();
+        public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<PostLike> PostLikes => Set<PostLike>();
         public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
@@ -24,10 +26,27 @@ namespace Social.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            MediaModelConfiguration.Configure(modelBuilder);
+            modelBuilder.Entity<Friendship>(entity =>
+            {
+                entity.ToTable("friendships", table =>
+                {
+                    table.HasCheckConstraint("ck_friendships_pair", "\"UserLowId\" < \"UserHighId\"");
+                    table.HasCheckConstraint("ck_friendships_requester", "\"RequestedById\" IN (\"UserLowId\", \"UserHighId\")");
+                });
+                entity.HasKey(f => f.Id);
+                entity.Property(f => f.Id).ValueGeneratedNever();
+                entity.HasIndex(f => new { f.UserLowId, f.UserHighId }).IsUnique();
+                entity.HasIndex(f => new { f.UserHighId, f.Status });
+                entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(f => f.UserLowId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(f => f.UserHighId).OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<Post>(entity =>
             {
                 entity.ToTable("posts");
+                entity.Property(p => p.Visibility).HasDefaultValue(PostVisibility.Public);
+                entity.HasIndex(p => new { p.AuthorId, p.CreatedAt, p.Id });
 
                 entity.HasKey(post => post.Id);
 

@@ -1,0 +1,126 @@
+.viewport {
+    position: fixed;
+    right: 4px;
+    bottom: 4px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(444px, calc(100vw - 8px));
+    max-height: calc(100dvh - 8px);
+    padding: 12px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    filter: none;
+    backdrop-filter: none;
+    pointer-events: none;
+}
+
+.toast {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    min-width: 0;
+    min-height: 76px;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    border: 1px solid;
+    border-left-width: 4px;
+    border-radius: 12px;
+    /* Bóng nhẹ chỉ áp dụng cho từng thẻ. */
+    box-shadow: 0 2px 6px rgb(15 23 42 / 8%);
+    pointer-events: auto;
+}
+
+.message {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.error {
+    color: #a51d2d;
+    background: #fff3f4;
+    border-color: #edbac1;
+}
+
+.success {
+    color: #17653a;
+    background: #f0fdf4;
+    border-color: #acd9bb;
+}
+
+.info {
+    color: #1e4f94;
+    background: #eff6ff;
+    border-color: #b8d2f2;
+}
+
+.close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+    line-height: 0;
+    cursor: pointer;
+}
+
+    .close:hover {
+        background: rgb(0 0 0 / 4%);
+    }
+
+    .close:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 3px;
+    }
+
+.timer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.track,
+.progress {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.track {
+    opacity: 0.2;
+}
+
+.progress {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: countdown 5s linear forwards;
+}
+
+.toast:hover .progress,
+.toast:focus-within .progress {
+    animation-play-state: paused;
+}
+
+@keyframes countdown {
+    to {
+        stroke-dashoffset: 0;
+    }
+}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,6 +7,7 @@ namespace Social.Application.UserProfiles
     public class UserProfileResponse
     {
         public Guid UserId { get; set; }
+        public string? AvatarUrl { get; set; }
 
         public string DisplayName { get; set; } = string.Empty;
 

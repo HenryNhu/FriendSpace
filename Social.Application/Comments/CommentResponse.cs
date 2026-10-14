@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -19,5 +19,6 @@ namespace Social.Application.Comments
         public DateTimeOffset? UpdatedAt { get; set; }
 
         public string? AuthorDisplayName { get; set; }
+        public string? AuthorAvatarUrl { get; set; }
     }
 }

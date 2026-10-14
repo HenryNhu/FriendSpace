@@ -1,46 +1,37 @@
-﻿using Social.Application.Abstractions;
+using Social.Application.Abstractions;
+using Social.Application.Common;
 using Social.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace Social.Application.UserProfiles;
 
-namespace Social.Application.UserProfiles
+public class UserProfileService(IUserProfileRepository profiles)
 {
-    public class UserProfileService
+    private async Task<UserProfileResponse> ToResponseAsync(UserProfile profile, CancellationToken ct)
     {
-        private readonly IUserProfileRepository _userProfileRepository;
-
-        public UserProfileService(IUserProfileRepository userProfileRepository)
+        var cards = await profiles.GetCardsAsync([profile.UserId], ct);
+        return new UserProfileResponse
         {
-            _userProfileRepository = userProfileRepository;
-        }
-
-        private static UserProfileResponse ToResponse(UserProfile profile)
-        {
-            return new UserProfileResponse
-            {
-                UserId = profile.UserId,
-                DisplayName = profile.DisplayName,
-                Bio = profile.Bio,
-                CreatedAt = profile.CreatedAt,
-                UpdatedAt = profile.UpdatedAt
-            };
-        }
-
-        public async Task<UserProfileResponse?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
-        {
-            var profile = await _userProfileRepository.GetByUserIdAsync(userId, cancellationToken);
-
-            return profile is null ? null : ToResponse(profile);
-        }
-
-        public async Task<UserProfileResponse?> SaveAsync(Guid currentUserId, string displayName, string? bio, CancellationToken cancellationToken = default)
-        {
-            var requestedProfile = new UserProfile(currentUserId, displayName,bio);
-
-            var savedProfile = await _userProfileRepository.SaveAsync(requestedProfile, cancellationToken);
-
-            return savedProfile is null ? null : ToResponse(savedProfile);
-        }
+            UserId = profile.UserId,
+            DisplayName = profile.DisplayName,
+            Bio = profile.Bio,
+            CreatedAt = profile.CreatedAt,
+            UpdatedAt = profile.UpdatedAt,
+            AvatarUrl = cards.GetValueOrDefault(profile.UserId)?.AvatarUrl
+        };
+    }
+    public async Task<UserProfileResponse?> GetByUserIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var profile = await profiles.GetByUserIdAsync(id, ct);
+        return profile is null ? null : await ToResponseAsync(profile, ct);
+    }
+    public async Task<UserProfileResponse?> SaveAsync(Guid id, string displayName, string? bio, CancellationToken ct = default)
+    {
+        var profile = await profiles.SaveAsync(new UserProfile(id, displayName, bio), ct);
+        return profile is null ? null : await ToResponseAsync(profile, ct);
+    }
+    public Task<IReadOnlyList<UserProfileResponse>> SearchAsync(string? query, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var text = query?.Trim() ?? string.Empty;
+        if (text.Length > 80) throw new ArgumentException("Từ khóa tìm kiếm quá dài.");
+        return profiles.SearchAsync(text, Paging.Skip(pageNumber, pageSize), pageSize, ct);
     }
 }

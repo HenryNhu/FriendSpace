@@ -1,109 +1,47 @@
-﻿using Social.Application.Abstractions;
+using Social.Application.Abstractions;
+using Social.Application.Common;
 using Social.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace Social.Application.Comments;
 
-namespace Social.Application.Comments
+public class CommentService(IPostRepository posts, ICommentRepository comments, IUserProfileRepository profiles)
 {
-    public class CommentService
+    private async Task<IReadOnlyList<CommentResponse>> MapAsync(IReadOnlyList<Comment> rows, CancellationToken ct)
     {
-        private readonly IPostRepository _postRepository;
-        private readonly ICommentRepository _commentRepository;
-
-        public CommentService(IPostRepository postRepository, ICommentRepository commentRepository)
+        var cards = await profiles.GetCardsAsync(rows.Select(c => c.AuthorId), ct);
+        return rows.Select(c => new CommentResponse
         {
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
-        }
-
-        private static CommentResponse ToResponse(Comment comment)
-        {
-            return new CommentResponse
-            {
-                Id = comment.Id,
-                PostId = comment.PostId,
-                AuthorId = comment.AuthorId,
-                Content = comment.Content,
-                CreatedAt = comment.CreatedAt,
-                UpdatedAt = comment.UpdatedAt
-            };
-        }
-
-        public async Task<CommentResponse?> CreateAsync(Guid postId, Guid currentUserId, string content, CancellationToken cancellationToken = default)
-        {
-            var post = await _postRepository.GetByIdAsync(postId, cancellationToken);
-
-            if (post is null)
-            {
-                return null;
-            }
-
-            var comment = new Comment(postId, currentUserId, content);
-
-            await _commentRepository.AddAsync(comment, cancellationToken);
-
-            return ToResponse(comment);
-        }
-
-        public async Task<CommentResponse?> GetByIdAsync(Guid postId, Guid commentId, CancellationToken cancellationToken = default)
-        {
-            var comment = await _commentRepository.GetByIdAsync(postId, commentId, cancellationToken);
-
-            return comment is null ? null : ToResponse(comment);
-        }
-
-        public async Task<IReadOnlyList<CommentResponse>?> GetPageAsync(Guid postId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
-        {
-            if (pageNumber < 1)
-            {
-                throw new ArgumentException("Số trang phải lớn hơn hoặc bằng 1.");
-            }
-
-            if (pageSize < 1 || pageSize > 50)
-            {
-                throw new ArgumentException("Số bình luận mỗi trang phải từ 1 đến 50.");
-            }
-
-            long skip = ((long)pageNumber - 1) * pageSize;
-
-            if (skip > int.MaxValue)
-            {
-                throw new ArgumentException("Số trang quá lớn.");
-            }
-
-            var post = await _postRepository.GetByIdAsync(postId, cancellationToken);
-
-            if (post is null)
-            {
-                return null;
-            }
-
-            var comments = await _commentRepository.GetPageAsync(postId, (int)skip, pageSize, cancellationToken);
-
-            return comments.Select(ToResponse).ToList();
-        }
-
-        public async Task<CommentResponse?> UpdateContentAsync(Guid postId, Guid commentId, Guid currentUserId, string content, CancellationToken cancellationToken = default)
-        {
-            var comment = await _commentRepository.GetByIdAsync(postId, commentId, cancellationToken);
-
-            if (comment is null || comment.AuthorId != currentUserId)
-            {
-                return null;
-            }
-
-            comment.UpdateContent(content);
-
-            await _commentRepository.UpdateContentAsync(comment, cancellationToken);
-
-            return ToResponse(comment);
-        }
-
-        public async Task<bool> DeleteAsync(Guid postId, Guid commentId, Guid currentUserId, CancellationToken cancellationToken = default)
-            {
-            return await _commentRepository.DeleteAsync(postId, commentId, currentUserId, cancellationToken);
-        }
-
+            Id = c.Id,
+            PostId = c.PostId,
+            AuthorId = c.AuthorId,
+            Content = c.Content,
+            CreatedAt = c.CreatedAt,
+            UpdatedAt = c.UpdatedAt,
+            AuthorDisplayName = cards.GetValueOrDefault(c.AuthorId)?.DisplayName,
+            AuthorAvatarUrl = cards.GetValueOrDefault(c.AuthorId)?.AvatarUrl
+        }).ToList();
     }
+    public async Task<CommentResponse?> CreateAsync(Guid postId, Guid me, string content, CancellationToken ct = default)
+    {
+        var comment = new Comment(postId, me, content);
+        return await comments.AddAsync(comment, ct) ? (await MapAsync([comment], ct))[0] : null;
+    }
+    public async Task<CommentResponse?> GetByIdAsync(Guid postId, Guid id, Guid? viewerId, CancellationToken ct = default)
+    {
+        var row = await comments.GetByIdAsync(postId, id, viewerId, ct);
+        return row is null ? null : (await MapAsync([row], ct))[0];
+    }
+    public async Task<IReadOnlyList<CommentResponse>?> GetPageAsync(Guid postId, int pageNumber, int pageSize, Guid? viewerId, CancellationToken ct = default)
+    {
+        var skip = Paging.Skip(pageNumber, pageSize);
+        if (await posts.GetByIdAsync(postId, viewerId, ct) is null) return null;
+        return await MapAsync(await comments.GetPageAsync(postId, skip, pageSize, viewerId, ct), ct);
+    }
+    public async Task<CommentResponse?> UpdateContentAsync(Guid postId, Guid id, Guid me, string content, CancellationToken ct = default)
+    {
+        var row = await comments.GetByIdAsync(postId, id, me, ct);
+        if (row is null || row.AuthorId != me) return null;
+        row.UpdateContent(content);
+        return await comments.UpdateContentAsync(row, ct) ? (await MapAsync([row], ct))[0] : null;
+    }
+    public Task<bool> DeleteAsync(Guid postId, Guid id, Guid me, CancellationToken ct = default) => comments.DeleteAsync(postId, id, me, ct);
 }

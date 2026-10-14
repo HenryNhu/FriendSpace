@@ -181,6 +181,91 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("comments", (string)null);
                 });
 
+            modelBuilder.Entity("Social.Domain.Entities.Friendship", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequestedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserHighId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserLowId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserHighId", "Status");
+
+                    b.HasIndex("UserLowId", "UserHighId")
+                        .IsUnique();
+
+                    b.ToTable("friendships", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_friendships_pair", "\"UserLowId\" < \"UserHighId\"");
+
+                            t.HasCheckConstraint("ck_friendships_requester", "\"RequestedById\" IN (\"UserLowId\", \"UserHighId\")");
+                        });
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.MediaAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BlobName")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAvatar")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlobName")
+                        .IsUnique();
+
+                    b.HasIndex("CreatedAt")
+                        .HasFilter("\"PostId\" IS NULL AND \"IsAvatar\" = FALSE");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique()
+                        .HasFilter("\"IsAvatar\" = TRUE");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("media_assets", (string)null);
+                });
+
             modelBuilder.Entity("Social.Domain.Entities.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -199,7 +284,14 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Visibility")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("AuthorId", "CreatedAt", "Id");
 
                     b.ToTable("posts", (string)null);
                 });
@@ -372,6 +464,35 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.Friendship", b =>
+                {
+                    b.HasOne("Social.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserHighId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Social.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserLowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.MediaAsset", b =>
+                {
+                    b.HasOne("Social.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Social.Domain.Entities.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Social.Domain.Entities.PostLike", b =>

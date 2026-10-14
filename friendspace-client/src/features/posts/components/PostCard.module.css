@@ -1,0 +1,40 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eaf1ff;
+  color: #2864dc;
+  font-weight: 700;
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.metadata strong {
+  overflow-wrap: anywhere;
+}
+
+.metadata time {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.content {
+  margin: 16px 0 0;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

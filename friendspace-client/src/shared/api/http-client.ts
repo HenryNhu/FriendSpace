@@ -1,16 +1,13 @@
 export class ApiError extends Error {
   status: number;
   code?: string;
-
   constructor(status: number, message: string, code?: string) {
     super(message);
-
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
   }
 }
-
 interface ApiProblem {
   code?: string;
   message?: string;
@@ -18,78 +15,59 @@ interface ApiProblem {
   title?: string;
   errors?: Record<string, string[]>;
 }
-
 let csrfToken: string | null = null;
-
-export function setCsrfToken(token: string | null): void {
-  csrfToken = token;
+export const SESSION_INVALID = 'friendspace:session-invalid';
+export function setCsrfToken(value: string | null) {
+  csrfToken = value;
 }
-
-export async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+export function getCsrfToken() {
+  return csrfToken;
+}
+export function sessionError(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 401 || error.code === 'invalid_csrf');
+}
+export function parseResponse<T>(status: number, text: string, path: string): T {
+  let value: unknown;
+  try {
+    value = text ? JSON.parse(text) : undefined;
+  } catch {
+    value = undefined;
+  }
+  if (status < 200 || status >= 300) {
+    const problem = value as ApiProblem | undefined;
+    const message = problem?.errors ? Object.values(problem.errors).flat().join(' ') : undefined;
+    const error = new ApiError(status, message || problem?.message || problem?.detail || problem?.title || `HTTP ${status}`, problem?.code);
+    if (sessionError(error) && !path.startsWith('/auth/login') && !path.startsWith('/auth/register') && path !== '/auth/session') {
+      window.dispatchEvent(new CustomEvent(SESSION_INVALID, {
+        detail: error
+      }));
+    }
+    throw error;
+  }
+  if (text && value === undefined) throw new ApiError(status, 'Invalid JSON response', 'invalid_response');
+  return value as T;
+}
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const method = (options.method ?? 'GET').toUpperCase();
   const headers = new Headers(options.headers);
-
   headers.set('Accept', 'application/json');
-
-  if (options.body !== undefined && options.body !== null) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const isReadRequest = ['GET', 'HEAD', 'OPTIONS'].includes(method);
-
-  if (!isReadRequest) {
+  if (options.body != null && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
     if (!csrfToken) {
-      throw new ApiError(
-        400,
-        'Hãy tải lại phiên trước khi tiếp tục.',
-        'invalid_csrf',
-      );
+      const error = new ApiError(400, 'Session changed', 'invalid_csrf');
+      window.dispatchEvent(new CustomEvent(SESSION_INVALID, {
+        detail: error
+      }));
+      throw error;
     }
-
     headers.set('X-CSRF-TOKEN', csrfToken);
   }
-
   const response = await fetch(`/api${path}`, {
     ...options,
     method,
     headers,
     credentials: 'include',
-    cache: 'no-store',
+    cache: 'no-store'
   });
-
-  const text = await response.text();
-  let data: unknown;
-
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new ApiError(
-        response.status,
-        `API trả về phản hồi không hợp lệ (HTTP ${response.status}).`,
-      );
-    }
-  }
-
-  if (!response.ok) {
-    const problem = data as ApiProblem | undefined;
-
-    const validationMessage = problem?.errors
-      ? Object.values(problem.errors).flat().join(' ')
-      : undefined;
-
-    const message =
-      validationMessage ||
-      problem?.message ||
-      problem?.detail ||
-      problem?.title ||
-      `Yêu cầu thất bại (HTTP ${response.status}).`;
-
-    throw new ApiError(response.status, message, problem?.code);
-  }
-
-  return data as T;
+  return parseResponse<T>(response.status, await response.text(), path);
 }

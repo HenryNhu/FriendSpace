@@ -1,78 +1,45 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Social.Application.Abstractions;
 using Social.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace Social.Infrastructure.Persistence.Repositories;
 
-namespace Social.Infrastructure.Persistence.Repositories
+public class CommentRepository(SocialDbContext db) : ICommentRepository
 {
-    public class CommentRepository : ICommentRepository
+    private IQueryable<Guid> VisiblePosts(Guid? viewerId) => db.Posts.VisibleTo(db, viewerId).Select(p => p.Id);
+    public async Task<bool> AddAsync(Comment comment, CancellationToken ct = default)
     {
-        private readonly SocialDbContext _dbContext;
-
-        public CommentRepository(SocialDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
-        public async Task AddAsync(Comment comment, CancellationToken cancellationToken = default)
-        {
-            _dbContext.Comments.Add(comment);
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        public Task<Comment?> GetByIdAsync(Guid postId, Guid commentId, CancellationToken cancellationToken = default)
-        {
-            return _dbContext.Comments
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    comment =>
-                        comment.PostId == postId &&
-                        comment.Id == commentId,
-                    cancellationToken);
-        }
-
-        public async Task<IReadOnlyList<Comment>> GetPageAsync(Guid postId, int skip, int take, CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Comments
-                .AsNoTracking()
-                .Where(comment => comment.PostId == postId)
-                .OrderBy(comment => comment.CreatedAt)
-                .ThenBy(comment => comment.Id)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task UpdateContentAsync(Comment comment, CancellationToken cancellationToken = default)
-        {
-            _dbContext.Comments.Attach(comment);
-
-            var entry = _dbContext.Entry(comment);
-
-            entry.Property(c => c.Content).IsModified = true;
-            entry.Property(c => c.UpdatedAt).IsModified = true;
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task<bool> DeleteAsync(Guid postId, Guid commentId, Guid currentUserId, CancellationToken cancellationToken = default)
-        {
-            var affectedRows = await _dbContext.Comments
-                .Where(comment =>
-                    comment.PostId == postId &&
-                    comment.Id == commentId &&
-                    (
-                        comment.AuthorId == currentUserId ||
-                        _dbContext.Posts.Any(post =>
-                            post.Id == postId &&
-                            post.AuthorId == currentUserId)
-                    ))
-                .ExecuteDeleteAsync(cancellationToken);
-
-            return affectedRows > 0;
-        }
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        var rows = await db.Posts.FromSqlInterpolated($"SELECT * FROM posts WHERE \"Id\" = {comment.PostId} FOR SHARE")
+            .AsNoTracking().ToListAsync(ct);
+        if (rows.Count == 0 || !await VisiblePosts(comment.AuthorId).ContainsAsync(comment.PostId, ct)) return false;
+        db.Comments.Add(comment);
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return true;
+    }
+    public Task<Comment?> GetByIdAsync(Guid postId, Guid id, Guid? viewerId, CancellationToken ct = default)
+    {
+        var visibleIds = VisiblePosts(viewerId);
+        return db.Comments.AsNoTracking().Where(c => visibleIds.Contains(c.PostId))
+            .SingleOrDefaultAsync(c => c.PostId == postId && c.Id == id, ct);
+    }
+    public async Task<IReadOnlyList<Comment>> GetPageAsync(Guid postId, int skip, int take, Guid? viewerId, CancellationToken ct = default)
+    {
+        var visibleIds = VisiblePosts(viewerId);
+        return await db.Comments.AsNoTracking().Where(c => c.PostId == postId && visibleIds.Contains(c.PostId))
+            .OrderByDescending(c => c.CreatedAt).ThenByDescending(c => c.Id).Skip(skip).Take(take).ToListAsync(ct);
+    }
+    public async Task<bool> UpdateContentAsync(Comment comment, CancellationToken ct = default)
+    {
+        var visibleIds = VisiblePosts(comment.AuthorId);
+        return await db.Comments.Where(c => c.Id == comment.Id && c.PostId == comment.PostId && c.AuthorId == comment.AuthorId &&
+            visibleIds.Contains(c.PostId))
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Content, comment.Content).SetProperty(c => c.UpdatedAt, comment.UpdatedAt), ct) > 0;
+    }
+    public async Task<bool> DeleteAsync(Guid postId, Guid id, Guid me, CancellationToken ct = default)
+    {
+        var visibleIds = VisiblePosts(me);
+        return await db.Comments.Where(c => c.PostId == postId && c.Id == id && visibleIds.Contains(c.PostId) &&
+            (c.AuthorId == me || db.Posts.Any(p => p.Id == postId && p.AuthorId == me))).ExecuteDeleteAsync(ct) > 0;
     }
 }

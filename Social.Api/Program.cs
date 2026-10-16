@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Social.Api.Authentication;
 using Social.Api.Media;
 using Social.Application.Friendships;
+using Social.Application.Feed;
 using Social.Api.Contracts;
 using Social.Api.Endpoint;
 using Social.Application.Abstractions;
@@ -36,6 +37,8 @@ builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<UserProfileService>();
 builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
 builder.Services.AddScoped<FriendshipService>();
+builder.Services.AddScoped<IFeedRepository, FeedRepository>();
+builder.Services.AddScoped<FeedService>();
 builder.Services.AddFriendSpaceMedia(builder.Configuration);
 
 var app = builder.Build();
@@ -63,6 +66,7 @@ if (app.Environment.IsDevelopment())
 // Add Endpoint 
 app.MapAuthEndpoints();
 app.MapPostEndpoints();
+app.MapFeedEndpoints();
 app.MapCommentEndpoints();
 app.MapPostLikeEndpoints();
 app.MapUserProfileEndpoints();

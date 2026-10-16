@@ -47,6 +47,7 @@ namespace Social.Infrastructure.Persistence
                 entity.ToTable("posts");
                 entity.Property(p => p.Visibility).HasDefaultValue(PostVisibility.Public);
                 entity.HasIndex(p => new { p.AuthorId, p.CreatedAt, p.Id });
+                entity.HasIndex(p => new { p.CreatedAt, p.Id });
 
                 entity.HasKey(post => post.Id);
 

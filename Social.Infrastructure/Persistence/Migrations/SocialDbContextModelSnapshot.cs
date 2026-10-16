@@ -291,6 +291,8 @@ namespace Social.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt", "Id");
+
                     b.HasIndex("AuthorId", "CreatedAt", "Id");
 
                     b.ToTable("posts", (string)null);
